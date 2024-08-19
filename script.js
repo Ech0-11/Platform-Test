@@ -11,15 +11,19 @@ let yVelocity = 0;
 let xVelocity = 0;
 let isLeftPressed = false;
 let isRightPressed = false;
+let jumpCount = 0;
+let maxJumps = 3; // Allow up to 3 jumps
+let fallingPlatforms = new Set();
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowRight") {
         isRightPressed = true;
     } else if (event.key === "ArrowLeft") {
         isLeftPressed = true;
-    } else if (event.key === "ArrowUp" && !isJumping) {
+    } else if (event.key === "ArrowUp" && jumpCount < maxJumps) {
         isJumping = true;
         yVelocity = -jumpStrength;
+        jumpCount++;
     }
 });
 
@@ -61,6 +65,14 @@ function update() {
             playerY = platformRect.top - playerRect.height;
             yVelocity = 0;
             isJumping = false;
+            jumpCount = 0;
+
+            // Trigger falling platform
+            if (fallingPlatforms.has(platform)) {
+                platform.style.transition = "top 1s";
+                platform.style.top = `${platformRect.top + 200}px`; // Platform falls down by 200px
+                setTimeout(() => platform.style.display = "none", 1000); // Platform disappears after falling
+            }
         }
     });
 
@@ -71,6 +83,7 @@ function update() {
         playerY = gameArea.clientHeight - player.clientHeight;
         yVelocity = 0;
         isJumping = false;
+        jumpCount = 0;
     }
 
     // Update player position
@@ -79,5 +92,12 @@ function update() {
 
     requestAnimationFrame(update);
 }
+
+// Mark platforms as falling platforms
+platforms.forEach(platform => {
+    if (platform.classList.contains("falling")) {
+        fallingPlatforms.add(platform);
+    }
+});
 
 update();
