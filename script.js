@@ -1,5 +1,6 @@
 const player = document.getElementById("player");
-const platforms = document.querySelectorAll(".platform");
+const gameArea = document.getElementById("gameArea");
+const numPlatforms = 5; // Number of platforms to generate
 
 let playerX = 50;
 let playerY = 50;
@@ -14,6 +15,7 @@ let isRightPressed = false;
 let jumpCount = 0;
 let maxJumps = 3; // Allow up to 3 jumps
 let fallingPlatforms = new Set();
+let platformTimers = new Map(); // To keep track of falling timers
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowRight") {
@@ -34,6 +36,30 @@ document.addEventListener("keyup", (event) => {
         isLeftPressed = false;
     }
 });
+
+function generatePlatforms() {
+    for (let i = 0; i < numPlatforms; i++) {
+        const platform = document.createElement("div");
+        platform.className = "platform";
+        platform.style.width = "100px";
+        platform.style.height = "20px";
+        platform.style.backgroundColor = "#0f0";
+        platform.style.position = "absolute";
+        platform.style.top = `${Math.random() * (gameArea.clientHeight - 20)}px`;
+        platform.style.left = `${Math.random() * (gameArea.clientWidth - 100)}px`;
+        if (Math.random() < 0.5) {
+            platform.classList.add("falling");
+        }
+        gameArea.appendChild(platform);
+    }
+    updateFallingPlatforms();
+}
+
+function updateFallingPlatforms() {
+    document.querySelectorAll(".falling").forEach(platform => {
+        fallingPlatforms.add(platform);
+    });
+}
 
 function update() {
     // Update horizontal movement
@@ -69,10 +95,15 @@ function update() {
 
             // Trigger falling platform
             if (fallingPlatforms.has(platform)) {
-                platform.style.transition = "top 1s";
-                platform.style.top = `${platformRect.top + 200}px`; // Platform falls down by 200px
-                setTimeout(() => platform.style.display = "none", 1000); // Platform disappears after falling
-                fallingPlatforms.delete(platform); // Prevent multiple falls
+                const timer = platformTimers.get(platform);
+                if (!timer) {
+                    const timeoutId = setTimeout(() => {
+                        platform.style.transition = "top 1s";
+                        platform.style.top = `${platformRect.top + 200}px`; // Platform falls down by 200px
+                        setTimeout(() => platform.style.display = "none", 1000); // Platform disappears after falling
+                    }, 3000); // 3-second delay
+                    platformTimers.set(platform, timeoutId);
+                }
             }
         }
     });
@@ -94,11 +125,6 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Mark platforms as falling platforms
-platforms.forEach(platform => {
-    if (platform.classList.contains("falling")) {
-        fallingPlatforms.add(platform);
-    }
-});
-
+// Generate platforms and start the game
+generatePlatforms();
 update();
