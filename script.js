@@ -72,6 +72,7 @@ function update() {
                 platform.style.transition = "top 1s";
                 platform.style.top = `${platformRect.top + 200}px`; // Platform falls down by 200px
                 setTimeout(() => platform.style.display = "none", 1000); // Platform disappears after falling
+                fallingPlatforms.delete(platform); // Prevent multiple falls
             }
         }
     });
