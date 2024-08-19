@@ -71,6 +71,7 @@ function update() {
         xVelocity = 0;
     }
 
+    // Update player position
     playerX += xVelocity;
 
     // Gravity
@@ -78,6 +79,7 @@ function update() {
     playerY += yVelocity;
 
     // Collision detection with platforms
+    let onPlatform = false;
     platforms.forEach(platform => {
         const platformRect = platform.getBoundingClientRect();
         const playerRect = player.getBoundingClientRect();
@@ -92,6 +94,7 @@ function update() {
             yVelocity = 0;
             isJumping = false;
             jumpCount = 0;
+            onPlatform = true;
 
             // Trigger falling platform
             if (fallingPlatforms.has(platform)) {
@@ -108,15 +111,17 @@ function update() {
         }
     });
 
-    // Check boundaries
-    if (playerX < 0) playerX = 0;
-    if (playerX > gameArea.clientWidth - player.clientWidth) playerX = gameArea.clientWidth - player.clientWidth;
-    if (playerY > gameArea.clientHeight - player.clientHeight) {
+    // If not on a platform, reset jump count
+    if (!onPlatform && playerY > gameArea.clientHeight - player.clientHeight) {
         playerY = gameArea.clientHeight - player.clientHeight;
         yVelocity = 0;
         isJumping = false;
         jumpCount = 0;
     }
+
+    // Check boundaries
+    if (playerX < 0) playerX = 0;
+    if (playerX > gameArea.clientWidth - player.clientWidth) playerX = gameArea.clientWidth - player.clientWidth;
 
     // Update player position
     player.style.left = `${playerX}px`;
@@ -125,6 +130,6 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Generate platforms and start the game
+// Initialize game
 generatePlatforms();
 update();
