@@ -1,6 +1,6 @@
 const player = document.getElementById("player");
 const gameArea = document.getElementById("gameArea");
-const numPlatforms = 5; // Number of platforms to generate
+const numPlatforms = 5;
 
 let playerX = 50;
 let playerY = 50;
@@ -13,9 +13,10 @@ let xVelocity = 0;
 let isLeftPressed = false;
 let isRightPressed = false;
 let jumpCount = 0;
-let maxJumps = 3; // Allow up to 3 jumps
+let maxJumps = 3;
 let fallingPlatforms = new Set();
-let platformTimers = new Map(); // To keep track of falling timers
+let platformTimers = new Map();
+let platforms = []; // FIX: declare platforms array
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowRight") {
@@ -38,6 +39,9 @@ document.addEventListener("keyup", (event) => {
 });
 
 function generatePlatforms() {
+    // FIX: collect hardcoded HTML platforms first
+    document.querySelectorAll(".platform").forEach(p => platforms.push(p));
+
     for (let i = 0; i < numPlatforms; i++) {
         const platform = document.createElement("div");
         platform.className = "platform";
@@ -51,6 +55,7 @@ function generatePlatforms() {
             platform.classList.add("falling");
         }
         gameArea.appendChild(platform);
+        platforms.push(platform); // FIX: add to array
     }
     updateFallingPlatforms();
 }
@@ -62,7 +67,6 @@ function updateFallingPlatforms() {
 }
 
 function update() {
-    // Update horizontal movement
     if (isRightPressed) {
         xVelocity = playerSpeed;
     } else if (isLeftPressed) {
@@ -71,14 +75,11 @@ function update() {
         xVelocity = 0;
     }
 
-    // Update player position
     playerX += xVelocity;
 
-    // Gravity
     yVelocity += gravity;
     playerY += yVelocity;
 
-    // Collision detection with platforms
     let onPlatform = false;
     platforms.forEach(platform => {
         const platformRect = platform.getBoundingClientRect();
@@ -96,22 +97,20 @@ function update() {
             jumpCount = 0;
             onPlatform = true;
 
-            // Trigger falling platform
             if (fallingPlatforms.has(platform)) {
                 const timer = platformTimers.get(platform);
                 if (!timer) {
                     const timeoutId = setTimeout(() => {
                         platform.style.transition = "top 1s";
-                        platform.style.top = `${platformRect.top + 200}px`; // Platform falls down by 200px
-                        setTimeout(() => platform.style.display = "none", 1000); // Platform disappears after falling
-                    }, 3000); // 3-second delay
+                        platform.style.top = `${platformRect.top + 200}px`;
+                        setTimeout(() => platform.style.display = "none", 1000);
+                    }, 3000);
                     platformTimers.set(platform, timeoutId);
                 }
             }
         }
     });
 
-    // If not on a platform, reset jump count
     if (!onPlatform && playerY > gameArea.clientHeight - player.clientHeight) {
         playerY = gameArea.clientHeight - player.clientHeight;
         yVelocity = 0;
@@ -119,17 +118,14 @@ function update() {
         jumpCount = 0;
     }
 
-    // Check boundaries
     if (playerX < 0) playerX = 0;
     if (playerX > gameArea.clientWidth - player.clientWidth) playerX = gameArea.clientWidth - player.clientWidth;
 
-    // Update player position
     player.style.left = `${playerX}px`;
     player.style.top = `${playerY}px`;
 
     requestAnimationFrame(update);
 }
 
-// Initialize game
 generatePlatforms();
 update();
